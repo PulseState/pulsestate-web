@@ -1,0 +1,55 @@
+<!--
+  Pulsestate — Bestätigungsmail-Template
+
+  Einbau in Supabase:
+  1. Supabase Dashboard -> Authentication -> Email Templates -> "Confirm signup"
+  2. Kompletten Inhalt dieser Datei in das Feld "Message body" einfügen.
+  3. Betreff (Subject) z. B. auf "Bestätige deine E-Mail für Pulsestate" setzen.
+  4. Speichern.
+
+  {{ .ConfirmationURL }} ist eine feste Supabase-Variable und muss so bleiben.
+-->
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f2f8;padding:32px 0;font-family:Arial,Helvetica,sans-serif;">
+  <tr>
+    <td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="background-color:#0d0d12;padding:28px 32px;">
+            <span style="font-size:20px;font-weight:bold;color:#ffffff;">pulse<span style="color:#ff5f7e;">state</span></span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <h1 style="margin:0 0 12px;font-size:22px;color:#0d0d12;">Bestätige deine E-Mail-Adresse</h1>
+            <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4a4a52;">
+              Fast geschafft — klick auf den Button, um deinen Pulsestate-Account zu aktivieren und
+              Events in deiner Stadt zu entdecken.
+            </p>
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="border-radius:100px;background-color:#ff5f7e;">
+                  <a href="{{ .ConfirmationURL }}"
+                     style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:100px;">
+                    E-Mail bestätigen
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:28px 0 0;font-size:12px;line-height:1.6;color:#9a98a3;">
+              Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br />
+              <a href="{{ .ConfirmationURL }}" style="color:#a06bff;">{{ .ConfirmationURL }}</a>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 32px;background-color:#faf9fc;">
+            <p style="margin:0;font-size:12px;color:#9a98a3;">
+              Pulsestate.at — Salzburg. Diese E-Mail wurde ausgelöst, weil sich jemand mit dieser Adresse bei
+              Pulsestate registriert hat. Falls das nicht du warst, ignoriere diese Mail einfach.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

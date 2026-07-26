@@ -1,10 +1,13 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import EventCard from "@/components/EventCard";
-import { events } from "@/lib/events";
+import { fetchEvents } from "@/lib/eventQueries";
+import { supabase } from "@/lib/supabaseClient";
 
-export default function Home() {
-  const todaysEvents = events.slice(0, 3);
+export const revalidate = 0;
+
+export default async function Home() {
+  const todaysEvents = await fetchEvents(3);
 
   return (
     <main>
@@ -43,11 +46,20 @@ export default function Home() {
 
       <section className="px-6 pb-16 md:px-12">
         <p className="mb-5 text-xs uppercase tracking-widest text-white/40">Heute in Salzburg</p>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {todaysEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
+
+        {!supabase ? (
+          <p className="text-sm text-white/40">Supabase ist noch nicht eingerichtet — siehe README.</p>
+        ) : todaysEvents.length === 0 ? (
+          <p className="text-sm text-white/40">
+            Noch keine Events. Unternehmer können über den Unternehmer-Account eigene Events anlegen.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {todaysEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="mx-6 mb-16 flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-white/10 bg-gradient-to-r from-accentpurple/15 to-accentpink/15 p-8 md:mx-12 md:p-10">

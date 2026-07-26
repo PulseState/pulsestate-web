@@ -7,12 +7,36 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabaseClient";
 
+function calculateAge(birthdateStr) {
+  const birthdate = new Date(birthdateStr);
+  if (Number.isNaN(birthdate.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birthdate.getFullYear();
+  const monthDiff = today.getMonth() - birthdate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [role, setRole] = useState("user");
-  const [name, setName] = useState("");
+
+  // Privatnutzer-Felder
+  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [birthdate, setBirthdate] = useState("");
+
+  // Unternehmer-Felder
+  const [companyName, setCompanyName] = useState("");
+  const [contactName, setContactName] = useState("");
+
+  // gemeinsam
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -27,11 +51,41 @@ export default function RegisterPage() {
       return;
     }
 
+    if (role === "user") {
+      const age = calculateAge(birthdate);
+      if (age === null) {
+        setError("Bitte gib ein gültiges Geburtsdatum an.");
+        return;
+      }
+      if (age < 16) {
+        setError("Du musst mindestens 16 Jahre alt sein, um dich zu registrieren.");
+        return;
+      }
+    }
+
+    const metadata =
+      role === "user"
+        ? {
+            role: "user",
+            display_name: username,
+            username,
+            first_name: firstName,
+            last_name: lastName,
+            birthdate,
+          }
+        : {
+            role: "business",
+            display_name: companyName,
+            company_name: companyName,
+            first_name: contactName,
+            contact_email: email,
+          };
+
     setLoading(true);
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: name, role } },
+      options: { data: metadata },
     });
     setLoading(false);
 
@@ -47,6 +101,10 @@ export default function RegisterPage() {
       setInfo("Fast geschafft — bitte bestätige deine E-Mail-Adresse über den Link, den wir dir geschickt haben.");
     }
   }
+
+  const inputClass =
+    "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-accentpink/50";
+  const labelClass = "mb-1 block text-xs text-white/50";
 
   return (
     <main>
@@ -78,36 +136,108 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4">
+          {role === "user" ? (
+            <>
+              <div>
+                <label className={labelClass}>Nutzername</label>
+                <input
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="dein_nutzername"
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className={labelClass}>Vorname</label>
+                  <input
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Vorname"
+                    className={inputClass}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className={labelClass}>Nachname</label>
+                  <input
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Nachname"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Geburtsdatum (ab 16 Jahren)</label>
+                <input
+                  type="date"
+                  required
+                  value={birthdate}
+                  onChange={(e) => setBirthdate(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>E-Mail</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="du@beispiel.at"
+                  className={inputClass}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className={labelClass}>Unternehmensname</label>
+                <input
+                  required
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="z. B. Republic Club"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Name (Ansprechpartner:in)</label>
+                <input
+                  required
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  placeholder="Vor- und Nachname"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Kontakt-E-Mail (auch für den Login)</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="kontakt@deinbusiness.at"
+                  className={inputClass}
+                />
+              </div>
+            </>
+          )}
+
           <div>
-            <label className="mb-1 block text-xs text-white/50">Name</label>
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Dein Name"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-accentpink/50"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-white/50">E-Mail</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="du@beispiel.at"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-accentpink/50"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-white/50">Passwort</label>
+            <label className={labelClass}>Passwort</label>
             <input
               type="password"
               required
+              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-accentpink/50"
+              className={inputClass}
             />
           </div>
 

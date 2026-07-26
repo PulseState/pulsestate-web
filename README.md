@@ -1,78 +1,101 @@
 # Pulsestate — Web MVP
 
 Next.js + Tailwind Umsetzung von Design 1 (Dark Nightlife). Enthält: Startseite, Event-Übersicht,
-Event-Detail mit echtem Bewertungssystem, echten Login/Registrierung (Supabase Auth),
-Unternehmer-Dashboard (Mock-Daten).
+Event-Detail mit Bewertungssystem (bearbeiten/löschen), echtes Login/Registrierung (Supabase Auth,
+getrennte Felder für Privatnutzer/Unternehmer, 16+ Prüfung), Profileinstellungen für beide
+Account-Typen inkl. Bild-Upload, echtes Event-CRUD für Unternehmer (inkl. Löschen durch
+Moderator/Administrator), Rollen-System mit farbigen Badges, Impressum/Datenschutz-Platzhalterseiten.
 
-Events selbst kommen weiterhin aus `src/lib/events.js` (Mock-Daten) — Login, Registrierung und
-Bewertungen laufen bereits über eine echte Supabase-Datenbank, sobald du sie eingerichtet hast.
+## 1. Supabase-Projekt einrichten (oder bestehendes updaten)
 
-## 1. Supabase-Projekt einrichten
+1. Falls noch nicht geschehen: auf [supabase.com](https://supabase.com) ein Projekt anlegen.
+2. **SQL Editor** → **New query** → kompletten Inhalt von `supabase-schema.sql` einfügen → **Run**.
+   Das Skript ist so geschrieben, dass es auch dann sicher ist, wenn du vorher schon eine ältere
+   Version davon ausgeführt hattest — es legt nur an, was noch fehlt. Es legt zusätzlich zu den
+   Tabellen auch automatisch die drei Storage-Buckets (`avatars`, `banners`, `event-media`) mit den
+   passenden Zugriffsrechten an, dafür musst du im Dashboard nichts manuell klicken.
+3. **Project Settings → API Keys**: Project URL und Publishable/anon Key kopieren (siehe unten).
 
-1. Auf [supabase.com](https://supabase.com) einloggen (GitHub-Login geht auch) und **New Project**
-   anlegen. Name z. B. `pulsestate`, Region am besten `Central EU (Frankfurt)`, ein Datenbank-Passwort
-   setzen (merken, brauchst du selten, aber sicher aufheben).
-2. Warten, bis das Projekt fertig aufgesetzt ist (dauert 1–2 Minuten).
-3. Links im Menü auf **SQL Editor** → **New query**. Den kompletten Inhalt von `supabase-schema.sql`
-   (liegt in diesem Projektordner) reinkopieren und **Run** klicken. Das legt die Tabellen `profiles`
-   und `ratings` inklusive Berechtigungen an.
-4. Links im Menü auf **Project Settings** → **API**. Dort **Project URL** und **anon public** Key
-   kopieren.
+## 2. Env-Variablen (falls noch nicht gesetzt)
 
-## 2. Env-Variablen setzen
-
-Lokal: `.env.local.example` zu `.env.local` kopieren und die zwei Werte eintragen:
+Lokal in `.env.local`, bei Vercel unter Project Settings → Environment Variables:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ... (oder sb_publishable_...)
 ```
 
-Bei Vercel: Project Settings → **Environment Variables** → beide Variablen mit denselben Werten
-eintragen (Environment: Production and Preview) → **Save**. Danach einmal **Redeploy** anstoßen
-(Deployments-Tab → oben rechts bei der letzten Deployment die drei Punkte → Redeploy), damit die
-Variablen greifen.
+Nach dem Setzen bei Vercel einmal **Redeploy** anstoßen.
 
-## 3. Lokal starten (optional)
+## 3. Rollen manuell vergeben (Administrator, Moderator, Supporter, Team)
 
-Nur nötig, wenn du selbst am Code weiterarbeiten willst. Voraussetzung: Node.js installiert.
+Es gibt aktuell keine Oberfläche dafür — das machst du direkt in Supabase:
+
+1. Supabase Dashboard → **Table Editor** → Tabelle **profiles**.
+2. Zeile der gewünschten Person suchen (über die E-Mail lässt sich das nicht direkt filtern, aber
+   `display_name`/`username` sollte helfen — im Zweifel über **Authentication** → **Users** die
+   User-ID der Person nachschlagen und danach in `profiles` suchen).
+3. In der Spalte **role** den Wert ändern auf `admin`, `moderator`, `supporter`, `team`, `business`
+   oder `user`.
+4. Speichern — die Person sieht die neue Rolle (Badge + Rechte) beim nächsten Neuladen der Seite.
+
+## 4. Neue Seiten im Überblick
+
+`/profile` — Profileinstellungen für Privatnutzer (Profilbild, Biographie, Name/Nutzername
+bearbeiten, Geburtsdatum ist gesperrt).
+
+`/business/profile` — Profileinstellungen für Unternehmer (Banner, Logo, Biographie, mehrere
+Standorte verwalten).
+
+`/business/events/new` — Event erstellen (nur für Unternehmer/Administrator-Accounts sichtbar).
+
+`/impressum`, `/datenschutz` — rechtliche Seiten, aktuell mit **Platzhaltern** befüllt (siehe
+Hinweis unten).
+
+## 5. Wichtig: Impressum & Datenschutzerklärung
+
+Die beiden Seiten unter `src/app/impressum/page.js` und `src/app/datenschutz/page.js` enthalten
+noch Platzhalter wie `[DEIN NAME]`, `[DEINE ADRESSE]`, `[KONTAKT-EMAIL]`. Die musst du durch echte
+Angaben ersetzen, bevor die Seite öffentlich läuft — sonst drohen in Österreich Abmahnungen wegen
+fehlender Impressumspflicht (§ 5 ECG). Beide Texte sind Vorlagen und keine Rechtsberatung; lass sie
+von einer rechtskundigen Person prüfen, besonders wegen der Registrierung ab 16 Jahren und der
+verarbeiteten Nutzerdaten.
+
+## 6. Bestätigungsmail branden
+
+`supabase/email-templates/confirm-signup.html` enthält ein gebrandetes HTML-Template. Einbau:
+Supabase Dashboard → **Authentication** → **Email Templates** → **Confirm signup** → Inhalt der
+Datei in "Message body" einfügen → Speichern. Die Variable `{{ .ConfirmationURL }}` muss dabei
+unverändert bleiben.
+
+## 7. Lokal starten (optional)
 
 ```
 npm install
 npm run dev
 ```
 
-Danach lokal unter http://localhost:3000 erreichbar.
-
-## 4. Änderungen live bringen
+## 8. Änderungen live bringen
 
 ```
 git add .
-git commit -m "Supabase Auth + Bewertungen"
+git commit -m "Rollen, Profile, echte Events, Impressum/Datenschutz"
 git push
 ```
 
-Vercel deployt bei jedem Push auf `main` automatisch neu.
+Vercel deployt bei Push auf `main` automatisch neu.
 
-## Was aktuell schon echt funktioniert
+## Bekannte Einschränkungen / nächste Schritte
 
-Registrierung (User oder Unternehmer über den Toggle), Login/Logout, Anzeige des eingeloggten
-Status in der Navigation, sowie Bewertungen abgeben und anzeigen auf jeder Event-Detailseite
-(eine Bewertung pro Person und Event, erneutes Abschicken überschreibt die vorherige).
-
-Falls bei der Registrierung in Supabase unter **Authentication** → **Providers** → **Email** die
-Option "Confirm email" aktiviert ist (Standard), muss man nach dem Registrieren erst den
-Bestätigungslink in der Mail anklicken, bevor der Login funktioniert.
-
-## Was als Nächstes sinnvoll wäre
-
-Events aus einer echten Tabelle statt `src/lib/events.js` (dann können Unternehmer eigene Events
-anlegen), Post-Event-Chat, Party Challenges.
+`src/lib/events.js` (die alten Mock-Daten) wird nirgends mehr verwendet und kann bei Gelegenheit
+gelöscht werden. Die Altersprüfung (16+) läuft aktuell nur clientseitig bei der Registrierung, nicht
+serverseitig erzwungen. Rollen werden manuell in Supabase vergeben, es gibt noch keine
+Admin-Oberfläche dafür. "Ich bin dabei"-Button, Post-Event-Chat und Party Challenges sind weiterhin
+nur als Platzhalter vorhanden.
 
 ## Hinweis zum Build
 
 Dieses Projekt wurde in einer Sandbox ohne npm-Registry-Zugriff erstellt — `npm install` /
 `npm run build` konnten hier nicht automatisch verifiziert werden. Der Code folgt Standard-Next.js-
-Konventionen (App Router); ein `npm run build` läuft normalerweise ohne Anpassungen durch, sowohl
-lokal als auch automatisch bei Vercel. Falls doch ein Fehler auftaucht, schick mir einfach die
-Fehlermeldung.
+Konventionen (App Router); ein `npm run build` läuft normalerweise ohne Anpassungen durch. Falls
+doch ein Fehler auftaucht, schick mir einfach die Fehlermeldung.

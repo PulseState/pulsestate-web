@@ -5,6 +5,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Solange NEXT_PUBLIC_SUPABASE_URL und NEXT_PUBLIC_SUPABASE_ANON_KEY nicht
 // gesetzt sind (siehe .env.local.example), bleibt supabase "null" und die
-// Seiten laufen weiter mit den Mock-Daten aus src/lib/events.js.
+// Seiten zeigen stattdessen einen Setup-Hinweis statt echter Daten.
 export const supabase =
   supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;

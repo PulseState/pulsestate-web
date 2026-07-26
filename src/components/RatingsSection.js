@@ -2,35 +2,66 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import RoleBadge from "@/components/RoleBadge";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function RatingsSection({ eventId }) {
   const [session, setSession] = useState(null);
+  const [profileRole, setProfileRole] = useState(null);
   const [ratings, setRatings] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
+
+  const [myRatingId, setMyRatingId] = useState(null);
+  const [editing, setEditing] = useState(false);
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [done, setDone] = useState(false);
 
-  useEffect(() => {
+  async function load() {
     if (!supabase) {
       setLoadingList(false);
       return;
     }
 
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: sessionData } = await supabase.auth.getSession();
+    setSession(sessionData.session);
 
-    supabase
+    if (sessionData.session) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", sessionData.session.user.id)
+        .single();
+      setProfileRole(prof?.role || "user");
+    }
+
+    const { data, error: fetchError } = await supabase
       .from("ratings")
-      .select("id, stars, comment, created_at, profiles(display_name)")
+      .select("id, stars, comment, user_id, profiles(display_name, role)")
       .eq("event_id", eventId)
-      .order("created_at", { ascending: false })
-      .then(({ data, error: fetchError }) => {
-        if (!fetchError) setRatings(data || []);
-        setLoadingList(false);
-      });
+      .order("created_at", { ascending: false });
+
+    if (!fetchError) {
+      setRatings(data || []);
+      if (sessionData.session) {
+        const mine = (data || []).find((r) => r.user_id === sessionData.session.user.id);
+        if (mine) {
+          setMyRatingId(mine.id);
+          setStars(mine.stars);
+          setComment(mine.comment || "");
+          setEditing(false);
+        } else {
+          setEditing(true);
+        }
+      }
+    }
+    setLoadingList(false);
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
   async function handleSubmit(e) {
@@ -43,12 +74,14 @@ export default function RatingsSection({ eventId }) {
     }
 
     setSubmitting(true);
-    const { error: submitError } = await supabase.from("ratings").upsert({
-      event_id: eventId,
-      user_id: session.user.id,
-      stars,
-      comment,
-    });
+    const { data, error: submitError } = await supabase
+      .from("ratings")
+      .upsert(
+        { event_id: eventId, user_id: session.user.id, stars, comment },
+        { onConflict: "event_id,user_id" }
+      )
+      .select()
+      .single();
     setSubmitting(false);
 
     if (submitError) {
@@ -56,8 +89,29 @@ export default function RatingsSection({ eventId }) {
       return;
     }
 
-    setDone(true);
+    setMyRatingId(data.id);
+    setEditing(false);
+    load();
   }
+
+  async function handleDeleteMine() {
+    if (!myRatingId) return;
+    if (!confirm("Deine Bewertung wirklich löschen?")) return;
+    await supabase.from("ratings").delete().eq("id", myRatingId);
+    setMyRatingId(null);
+    setStars(5);
+    setComment("");
+    setEditing(true);
+    load();
+  }
+
+  async function handleDeleteOther(id) {
+    if (!confirm("Diese Bewertung wirklich löschen?")) return;
+    await supabase.from("ratings").delete().eq("id", id);
+    load();
+  }
+
+  const isStaff = profileRole === "admin" || profileRole === "moderator";
 
   if (!supabase) {
     return (
@@ -78,15 +132,30 @@ export default function RatingsSection({ eventId }) {
           <p className="text-sm text-white/40">Noch keine Bewertungen — sei die erste Person.</p>
         ) : (
           <div className="space-y-3">
-            {ratings.map((r) => (
-              <div key={r.id} className="rounded-xl border border-white/10 bg-card p-4">
-                <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="font-medium">{r.profiles?.display_name || "Anonym"}</span>
-                  <span className="text-amber-400">★ {r.stars}</span>
+            {ratings.map((r) => {
+              const isMine = session && r.user_id === session.user.id;
+              const canDelete = isMine || isStaff;
+              return (
+                <div key={r.id} className="rounded-xl border border-white/10 bg-card p-4">
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2 font-medium">
+                      {r.profiles?.display_name || "Anonym"}
+                      <RoleBadge role={r.profiles?.role} />
+                    </span>
+                    <span className="text-amber-400">★ {r.stars}</span>
+                  </div>
+                  {r.comment && <p className="mb-2 text-sm text-white/60">{r.comment}</p>}
+                  {canDelete && (
+                    <button
+                      onClick={() => (isMine ? handleDeleteMine() : handleDeleteOther(r.id))}
+                      className="text-xs text-red-400 hover:underline"
+                    >
+                      {isMine ? "Löschen" : "Löschen (Moderation)"}
+                    </button>
+                  )}
                 </div>
-                {r.comment && <p className="text-sm text-white/60">{r.comment}</p>}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -101,8 +170,17 @@ export default function RatingsSection({ eventId }) {
             </Link>
             , um eine Bewertung abzugeben.
           </p>
-        ) : done ? (
-          <p className="text-sm text-emerald-400">Danke für deine Bewertung.</p>
+        ) : !editing ? (
+          <div className="flex items-center gap-3">
+            <span className="text-amber-400">★ {stars}</span>
+            <span className="text-sm text-white/50">{comment}</span>
+            <button onClick={() => setEditing(true)} className="text-xs text-accentpink hover:underline">
+              Bearbeiten
+            </button>
+            <button onClick={handleDeleteMine} className="text-xs text-red-400 hover:underline">
+              Löschen
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="flex gap-1">
@@ -126,13 +204,24 @@ export default function RatingsSection({ eventId }) {
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-accentpink/50"
             />
             {error && <p className="text-sm text-red-400">{error}</p>}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-full bg-gradient-to-r from-accentpink to-accentpurple px-6 py-2.5 text-sm font-medium disabled:opacity-50"
-            >
-              {submitting ? "Einen Moment…" : "Bewertung abschicken"}
-            </button>
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-full bg-gradient-to-r from-accentpink to-accentpurple px-6 py-2.5 text-sm font-medium disabled:opacity-50"
+              >
+                {submitting ? "Einen Moment…" : myRatingId ? "Bewertung aktualisieren" : "Bewertung abschicken"}
+              </button>
+              {myRatingId && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="rounded-full border border-white/20 px-6 py-2.5 text-sm hover:border-white/40"
+                >
+                  Abbrechen
+                </button>
+              )}
+            </div>
           </form>
         )}
       </div>
