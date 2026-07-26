@@ -10,13 +10,6 @@ export default function DatenschutzPage() {
       <section className="mx-auto max-w-2xl px-6 py-14 text-sm leading-relaxed text-white/70">
         <h1 className="mb-8 font-display text-3xl font-bold text-white">Datenschutzerklärung</h1>
 
-        <p className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
-          Diese Vorlage beschreibt, welche Daten die Pulsestate-Plattform technisch verarbeitet. Sie ersetzt keine
-          rechtliche Prüfung — bitte von einer rechtskundigen Person (insbesondere wegen Nutzerinnen und Nutzern
-          ab 16 Jahren) gegenlesen lassen, bevor die Seite live geht. [DEIN NAME / FIRMENNAME] als Verantwortlicher
-          gemäß Art. 4 Nr. 7 DSGVO einsetzen.
-        </p>
-
         <h2 className="mb-2 mt-8 font-display text-lg font-semibold text-white">1. Verantwortlicher</h2>
         <p className="mb-4">
           Angaben im {" "} zu finden.
