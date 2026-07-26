@@ -27,7 +27,24 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ... (oder sb_publishable_...)
 
 Nach dem Setzen bei Vercel einmal **Redeploy** anstoßen.
 
-## 3. Rollen manuell vergeben (Administrator, Moderator, Supporter, Team)
+## 3. Wartungsmodus
+
+Um die Seite vorübergehend nur für dich (Administrator-Account) sichtbar zu machen und allen
+anderen eine Wartungsseite zu zeigen: bei Vercel unter Environment Variables die Variable
+
+```
+NEXT_PUBLIC_MAINTENANCE_MODE=true
+```
+
+hinzufügen (Production, ggf. auch Preview) und redeployen. `/login` bleibt dabei immer erreichbar,
+damit du dich als Administrator einloggen kannst — danach schaltet sich die Seite für dich frei.
+Wichtig: Dafür muss dein Account bereits die Rolle `admin` haben (siehe Punkt 4). Zum Beenden des
+Wartungsmodus die Variable auf `false` setzen (oder löschen) und erneut redeployen.
+
+Das ist ein reiner Oberflächen-Schutz fürs Frontend, keine echte Zugriffssperre auf die Datenbank
+selbst — für den aktuellen Zweck (Seite vorübergehend "hinter Kulissen" halten) reicht das aber gut.
+
+## 4. Rollen manuell vergeben (Administrator, Moderator, Supporter, Team)
 
 Es gibt aktuell keine Oberfläche dafür — das machst du direkt in Supabase:
 
@@ -52,7 +69,7 @@ Standorte verwalten).
 `/impressum`, `/datenschutz` — rechtliche Seiten, aktuell mit **Platzhaltern** befüllt (siehe
 Hinweis unten).
 
-## 5. Wichtig: Impressum & Datenschutzerklärung
+## 6. Wichtig: Impressum & Datenschutzerklärung
 
 Die beiden Seiten unter `src/app/impressum/page.js` und `src/app/datenschutz/page.js` enthalten
 noch Platzhalter wie `[DEIN NAME]`, `[DEINE ADRESSE]`, `[KONTAKT-EMAIL]`. Die musst du durch echte
@@ -61,21 +78,21 @@ fehlender Impressumspflicht (§ 5 ECG). Beide Texte sind Vorlagen und keine Rech
 von einer rechtskundigen Person prüfen, besonders wegen der Registrierung ab 16 Jahren und der
 verarbeiteten Nutzerdaten.
 
-## 6. Bestätigungsmail branden
+## 7. Bestätigungsmail branden
 
 `supabase/email-templates/confirm-signup.html` enthält ein gebrandetes HTML-Template. Einbau:
 Supabase Dashboard → **Authentication** → **Email Templates** → **Confirm signup** → Inhalt der
 Datei in "Message body" einfügen → Speichern. Die Variable `{{ .ConfirmationURL }}` muss dabei
 unverändert bleiben.
 
-## 7. Lokal starten (optional)
+## 8. Lokal starten (optional)
 
 ```
 npm install
 npm run dev
 ```
 
-## 8. Änderungen live bringen
+## 9. Änderungen live bringen
 
 ```
 git add .

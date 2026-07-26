@@ -1,4 +1,5 @@
 import { Space_Grotesk, Inter } from "next/font/google";
+import MaintenanceGate from "@/components/MaintenanceGate";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -35,7 +36,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="de" className={`${spaceGrotesk.variable} ${inter.variable}`}>
-      <body className="bg-ink font-sans text-white/90 antialiased">{children}</body>
+      <body className="bg-ink font-sans text-white/90 antialiased">
+        <MaintenanceGate>{children}</MaintenanceGate>
+      </body>
     </html>
   );
 }
