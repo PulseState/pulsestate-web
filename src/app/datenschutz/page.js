@@ -12,7 +12,7 @@ export default function DatenschutzPage() {
 
         <h2 className="mb-2 mt-8 font-display text-lg font-semibold text-white">1. Verantwortlicher</h2>
         <p className="mb-4">
-          Angaben im {" "} zu finden.
+          Angaben im {" "} 
           <a href="/impressum" className="text-accentpink hover:underline">
             Impressum
           </a>
