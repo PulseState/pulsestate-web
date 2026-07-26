@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import RatingsSection from "@/components/RatingsSection";
 import { events, getEventById } from "@/lib/events";
 
 export function generateStaticParams() {
@@ -46,18 +47,17 @@ export default function EventDetailPage({ params }) {
 
         <p className="mb-10 max-w-xl text-white/70">{event.description}</p>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="mb-10 flex flex-wrap gap-3">
           <button className="rounded-full bg-gradient-to-r from-accentpink to-accentpurple px-6 py-3 text-sm font-medium">
             Ich bin dabei
           </button>
-          <button className="rounded-full border border-white/20 px-6 py-3 text-sm">
-            Bewertung schreiben
-          </button>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">
+        <div className="mb-10 rounded-2xl border border-white/10 bg-card p-6 text-sm text-white/50">
           Post-Event-Chat und Party-Challenge-Details werden freigeschaltet, sobald du eingecheckt hast.
         </div>
+
+        <RatingsSection eventId={event.id} />
       </section>
 
       <Footer />

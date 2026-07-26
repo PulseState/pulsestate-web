@@ -1,12 +1,39 @@
 # Pulsestate — Web MVP
 
 Next.js + Tailwind Umsetzung von Design 1 (Dark Nightlife). Enthält: Startseite, Event-Übersicht,
-Event-Detail, Login/Register (nur Ansicht), Unternehmer-Dashboard (Mock-Daten).
+Event-Detail mit echtem Bewertungssystem, echten Login/Registrierung (Supabase Auth),
+Unternehmer-Dashboard (Mock-Daten).
 
-Alle Events kommen aktuell aus `src/lib/events.js` (Mock-Daten). Sobald Supabase angebunden ist,
-werden diese durch echte Datenbankabfragen ersetzt.
+Events selbst kommen weiterhin aus `src/lib/events.js` (Mock-Daten) — Login, Registrierung und
+Bewertungen laufen bereits über eine echte Supabase-Datenbank, sobald du sie eingerichtet hast.
 
-## 1. Lokal starten (optional)
+## 1. Supabase-Projekt einrichten
+
+1. Auf [supabase.com](https://supabase.com) einloggen (GitHub-Login geht auch) und **New Project**
+   anlegen. Name z. B. `pulsestate`, Region am besten `Central EU (Frankfurt)`, ein Datenbank-Passwort
+   setzen (merken, brauchst du selten, aber sicher aufheben).
+2. Warten, bis das Projekt fertig aufgesetzt ist (dauert 1–2 Minuten).
+3. Links im Menü auf **SQL Editor** → **New query**. Den kompletten Inhalt von `supabase-schema.sql`
+   (liegt in diesem Projektordner) reinkopieren und **Run** klicken. Das legt die Tabellen `profiles`
+   und `ratings` inklusive Berechtigungen an.
+4. Links im Menü auf **Project Settings** → **API**. Dort **Project URL** und **anon public** Key
+   kopieren.
+
+## 2. Env-Variablen setzen
+
+Lokal: `.env.local.example` zu `.env.local` kopieren und die zwei Werte eintragen:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+```
+
+Bei Vercel: Project Settings → **Environment Variables** → beide Variablen mit denselben Werten
+eintragen (Environment: Production and Preview) → **Save**. Danach einmal **Redeploy** anstoßen
+(Deployments-Tab → oben rechts bei der letzten Deployment die drei Punkte → Redeploy), damit die
+Variablen greifen.
+
+## 3. Lokal starten (optional)
 
 Nur nötig, wenn du selbst am Code weiterarbeiten willst. Voraussetzung: Node.js installiert.
 
@@ -17,38 +44,30 @@ npm run dev
 
 Danach lokal unter http://localhost:3000 erreichbar.
 
-## 2. Auf GitHub bringen
-
-Im Projektordner (dort, wo diese README liegt):
+## 4. Änderungen live bringen
 
 ```
-git init
 git add .
-git commit -m "Pulsestate web MVP"
-git branch -M main
-git remote add origin https://github.com/<dein-username>/pulsestate-web.git
-git push -u origin main
+git commit -m "Supabase Auth + Bewertungen"
+git push
 ```
 
-Das Repo `pulsestate-web` vorher leer auf GitHub anlegen (ohne README/gitignore, sonst gibt's einen
-Konflikt beim ersten Push).
+Vercel deployt bei jedem Push auf `main` automatisch neu.
 
-## 3. Auf Vercel deployen
+## Was aktuell schon echt funktioniert
 
-1. Auf vercel.com mit GitHub-Account einloggen.
-2. "Add New Project" → das `pulsestate-web` Repo auswählen → Import.
-3. Vercel erkennt Next.js automatisch, keine Einstellungen nötig → Deploy.
-4. Unter Project Settings → Domains → `pulsestate.at` hinzufügen und die angezeigten DNS-Einträge
-   bei deinem Domain-Registrar setzen.
+Registrierung (User oder Unternehmer über den Toggle), Login/Logout, Anzeige des eingeloggten
+Status in der Navigation, sowie Bewertungen abgeben und anzeigen auf jeder Event-Detailseite
+(eine Bewertung pro Person und Event, erneutes Abschicken überschreibt die vorherige).
 
-## 4. Supabase später anbinden
+Falls bei der Registrierung in Supabase unter **Authentication** → **Providers** → **Email** die
+Option "Confirm email" aktiviert ist (Standard), muss man nach dem Registrieren erst den
+Bestätigungslink in der Mail anklicken, bevor der Login funktioniert.
 
-1. Auf supabase.com ein neues Projekt anlegen.
-2. Project Settings → API → `Project URL` und `anon public key` kopieren.
-3. Lokal `.env.local.example` zu `.env.local` kopieren und beide Werte eintragen.
-4. Bei Vercel dieselben zwei Variablen unter Project Settings → Environment Variables eintragen.
-5. `src/lib/supabaseClient.js` ist bereits vorbereitet — sobald die Variablen gesetzt sind, liefert
-   `supabase` einen aktiven Client statt `null`.
+## Was als Nächstes sinnvoll wäre
+
+Events aus einer echten Tabelle statt `src/lib/events.js` (dann können Unternehmer eigene Events
+anlegen), Post-Event-Chat, Party Challenges.
 
 ## Hinweis zum Build
 

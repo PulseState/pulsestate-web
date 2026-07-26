@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AuthButtons from "@/components/AuthButtons";
 
 export default function Navbar() {
   return (
@@ -20,20 +21,7 @@ export default function Navbar() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Link
-          href="/login"
-          className="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-white/40"
-        >
-          Anmelden
-        </Link>
-        <Link
-          href="/register"
-          className="rounded-full bg-gradient-to-r from-accentpink to-accentpurple px-5 py-2 text-sm font-medium"
-        >
-          Registrieren
-        </Link>
-      </div>
+      <AuthButtons />
     </nav>
   );
 }

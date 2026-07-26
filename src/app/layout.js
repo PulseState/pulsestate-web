@@ -14,8 +14,22 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Pulsestate — Spür den Puls deiner Stadt",
-  description: "Events entdecken, bewerten und nach der Party in Kontakt bleiben.",
+  metadataBase: new URL("https://pulsestate.at"),
+  title: {
+    default: "Pulsestate — Spür den Puls deiner Stadt",
+    template: "%s · Pulsestate",
+  },
+  description:
+    "Events entdecken, bewerten und nach der Party in Kontakt bleiben — Salzburg und bald überall.",
+  openGraph: {
+    title: "Pulsestate — Spür den Puls deiner Stadt",
+    description: "Events entdecken, bewerten und nach der Party in Kontakt bleiben.",
+    url: "https://pulsestate.at",
+    siteName: "Pulsestate",
+    locale: "de_AT",
+    type: "website",
+  },
+  themeColor: "#0d0d12",
 };
 
 export default function RootLayout({ children }) {
